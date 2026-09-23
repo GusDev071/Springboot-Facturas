@@ -6,53 +6,75 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@Component 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+@Component
+@RequestScope
+// @JsonIgnoreProperties({ "targetSource", "advisors" }) // se usa para ignorar los errores que se genera al consumir unos datos que no son JSON
 public class Invoice {
-
+    
+    @Autowired
     private Client client;
 
-    @Value ("${invoice.description}")
+    @Value("${invoice.description}")
     private String description;
 
-    @Autowired 
+    @Autowired
     @Qualifier("default")
     private List<Item> items;
 
-    Invoice(Client client) {
-        this.client = client;
+    public Invoice() {
+        System.out.println("Creando el componente de la factura");
+        System.out.println(client);
+        System.out.println(description);
+    }
+
+    @PostConstruct
+    public void init() {
+        System.out.println("Creando el componente de la factura");
+        client.setName(client.getName().concat(" Pepe"));
+        description = description.concat(" del cliente: ").concat(client.getName()).concat(" ")
+                .concat(client.getLastname());
+    }
+
+    @PreDestroy
+    public void destroy() {
+        System.out.println("Destruyendo el componente o bean invoice!");
     }
 
     public Client getClient() {
         return client;
     }
+
     public void setClient(Client client) {
         this.client = client;
     }
+
     public String getDescription() {
         return description;
     }
+
     public void setDescription(String description) {
         this.description = description;
     }
+
     public List<Item> getItems() {
         return items;
     }
+
     public void setItems(List<Item> items) {
         this.items = items;
     }
 
-    public int getTotal(){
-        /* int total = 0;
-        for (Item item : items){
-            total += item.getImporte();
-        }  *///forma con for
-
+    public int getTotal() {
         return items.stream()
-        .map(item -> item.getImporte())
-        .reduce(0, (sum, item) -> sum + item);
+                .map(item -> item.getImporte())
+                .reduce(0, (sum, importe) -> sum + importe);
     }
-
     
 }
